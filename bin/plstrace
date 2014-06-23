@@ -9,33 +9,84 @@ use warnings;
 
 use Debug::LTrace::plstrace;
 use Getopt::Long qw(:config auto_help auto_version bundling no_permute);
+use Time::HiRes qw(time);
 
 my %Opts;
-GetOptions(
-    't'   => sub { $Opts{-t}++ },
-    's=i' => \$Opts{-s},
-    'T'   => sub { $Opts{-T} = 1 },
+my $subs;
+my $res = GetOptions(
+    't'        => sub { $Opts{show_time}++ },
+    'reltime'  => sub { $Opts{show_time} += 10 },
+    's=i'      => sub { $Opts{strsize} = $_[1] },
+    'T'        => sub { $Opts{show_spent_time} = 1 },
+    'e=s'      => sub {
+        my $arg = $_[1];
+        my ($qual, $vals) = $arg =~ /^(\w+)=(.*)/
+            or die "Invalid value for -e, please see documentation\n";
+        #$vals = [split /,/, $vals];
+        if ($qual eq 'trace') {
+            $subs = $vals;
+        } else {
+            die "Unknown qualifier for -e '$qual', please see documentation\n";
+        }
+    },
 );
+exit 99 unless $res;
 
+@ARGV or die "Please specify Perl program to trace\n";
+defined $subs or die "Please specify -e trace=... option\n";
 my $prog = shift @ARGV;
-exec $^X, "-MDebug::LTrace::plstrace=(map {"$_=$Opts{$s}"} keys %Opts);
+
+my $dlp_import = $subs;
+$dlp_import .= "," . join(",", map {"-$_=$Opts{$_}"} keys %Opts);
+my $start_time = time();
+$dlp_import .= ",-start_time=$start_time";
+
+my @cmd = ($^X, "-MDebug::LTrace::plstrace=$dlp_import", $prog, @ARGV);
+say join " ", @cmd if $ENV{DEBUG};
+exec @cmd;
 
 # ABSTRACT: Trace calls to Perl functions
 # PODNAME: plstrace
 
 =head1 SYNOPSIS
 
-Basic usage:
+Usage:
 
- % plstrace your_program.pl --your --prog --options
+ % plstrace [--help | -h]
+ % plstrace [--version | -v]
+ % plstrace [PLSTRACE OPTIONS] <PROG> [PROG OPTIONS]
+
+Basic example (the only required option is C<-e trace=...> to specify which
+subroutines should be traced, the below example means all subroutines in the
+main package (C<*>) and all subroutines in the C<Foo> package (C<Foo::*>)):
+
+ % plstrace -e trace=*,Foo::* your_program.pl --your --prog --options
 
 Show time spent inside each subroutine:
 
- % plstrace -T your_program.pl ...
+ % plstrace -e trace=... -T your_program.pl ...
 
 More options:
 
  % plstrace -h
+
+Sample output (using C<--reltime -t> options):
+
+ 000.009660 > main::foo("some arg", "1")
+ 000.020905 > main::bar()
+ 000.020905 < main::bar()
+ 000.009660 < main::foo("some arg", "1")
+ 000.034183 > main::foo("some arg", "2")
+ 000.041502 > main::bar()
+ 000.041502 < main::bar()
+ 000.034183 < main::foo("some arg", "2")
+ 000.071704 > main::foo("some arg", "3")
+ 000.088051 > main::bar()
+ 000.088051 < main::bar()
+ 000.071704 < main::foo("some arg", "3")
+
+The main difference with strace output is that each sub is displayed twice,
+during entry and exit.
 
 
 =head1 DESCRIPTION
@@ -77,11 +128,26 @@ the times are not very accurate.
 Unless specified otherwise, these options follow its strace counterpart. The
 long options are the ones that are added and different from strace.
 
-=head2 -s INT
+=head2 -s SIZE(int)
 
 =head2 -T
 
 =head2 -t
+
+=head2 -e trace=SUB_SPECS(str)
+
+C<< <SUB SPECS> >> is a comma-separated sub spec. Each sub spec is either
+C</\w+/> (e.g. C<foo>) to mean a named subroutine in the C<main> package, C<*>
+to mean all subroutines in the C<main> package, C</\w+(::\w+)+/> (e.g.
+C<Foo::func>, C<Foo::Bar::blah>) to mean a fully-qualified named subroutine, or
+C</\w+(::\w+)*::\*/> (e.g. C<Foo::*>) to mean all subroutines in a package.
+
+=head2 --reltime
+
+When under C<-t>, show relative time against program start (in seconds, down to
+microseconds). Program start is measured right before plstrace exec's perl with
+Debug::LTrace::plstrace and your program. So the overhead of exec, perl startup,
+module and program compilation are all counted.
 
 
 =head1 SEE ALSO

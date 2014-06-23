@@ -7,7 +7,7 @@ use strict;
 use Devel::Symdump;
 use Hook::LexWrap;
 use SHARYANTO::String::Util qw/qqquote/;
-use Time::HiRes qw/gettimeofday tv_interval/;
+use Time::HiRes qw/time/;
 
 # VERSION
 # DATE
@@ -62,6 +62,7 @@ sub _new {
 
     bless $self, $class;
     $self->_start_trace();
+    #use DD; dd $self;
     $self;
 }
 
@@ -84,29 +85,27 @@ sub _start_trace {
                 #my ($caller_sub) = ( caller(1) )[3];
 
                 my $args = join(", ", map {$self->_esc($_)} @_);
-                unshift @messages, [ "$sub($args)", [ gettimeofday() ] ];
+                my $start_time = time();
+                my $msg = "> $sub($args)";
+                $msg = $self->_fmttime($start_time) . " $msg" if $self->{-show_time};
+                warn "$msg\n";
+                unshift @messages, [ "$sub($args)", $start_time ];
             },
             post => sub {
-                my $endtime = [gettimeofday()];
+                my $end_time = time();
                 my $wantarray = ( caller(0) )[5];
                 my $call_data = shift(@messages);
 
                 my $res = defined($wantarray) ? " = ".$self->_esc($wantarray ? pop : [pop]) : '';
-                my $msg = "$call_data->[0]$res";
-                if ($self->{-t}) {
-                    my $time = $self->_fmttime($call_data->[1]);
-                    $msg = "$time $msg";
-                }
-                if ($self->{-T}) {
-                    $msg .= sprintf(" <%.6f>", tv_interval(
-                        $call_data->[1], [gettimeofday] ));
-                }
+                my $msg = "< $call_data->[0]$res";
+                $msg = $self->_fmttime($call_data->[1]) . " $msg" if $self->{-show_time};
+                $msg .= sprintf(" <%.6f>", $end_time - $call_data->[1] ) if $self->{-show_spent_time};
                 warn "$msg\n";
             } );
     }
 
     # defaults
-    $self->{-s} //= 32;
+    $self->{-strsize} //= 32;
 
     $self;
 }
@@ -117,8 +116,8 @@ sub _esc {
         "undef";
     } elsif (ref $data) {
         "$data";
-    } elsif (length($data) > $self->{-s}) {
-        qqquote(substr($data,0,$self->{-s}))."...";
+    } elsif (length($data) > $self->{-strsize}) {
+        qqquote(substr($data,0,$self->{-strsize}))."...";
     } else {
         qqquote($data);
     }
@@ -126,11 +125,15 @@ sub _esc {
 
 sub _fmttime {
     my ($self, $time) = @_;
-    my @lt = localtime($time->[0]);
-    if ($self->{-t} > 2) {
-        sprintf "%d.%06d", $time->[0], $time->[1];
-    } elsif ($self->{-t} > 1) {
-        sprintf "%02d:%02d:%02d.%06d", $lt[2], $lt[1], $lt[0], $time->[1];
+
+    my @lt = localtime($time);
+    if ($self->{-show_time} > 10) {
+        sprintf "%010.6f", $time - $self->{-start_time};
+    } elsif ($self->{-show_time} > 2) {
+        sprintf "%.6f", $time;
+    } elsif ($self->{-show_time} > 1) {
+        my $frac = ($time - int($time)) * 1000_000;
+        sprintf "%02d:%02d:%02d.%06d", $lt[2], $lt[1], $lt[0], $frac;
     } else {
         sprintf "%02d:%02d:%02d", $lt[2], $lt[1], $lt[0];
     }
