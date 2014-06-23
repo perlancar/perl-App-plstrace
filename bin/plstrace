@@ -8,12 +8,20 @@ use warnings;
 # VERSION
 
 use Debug::LTrace::plstrace;
-use Getopt::Long qw(:config auto_help auto_version bundling no_permute);
+use Getopt::Long qw(:config bundling no_permute);
 use Time::HiRes qw(time);
 
 my %Opts;
 my $subs;
 my $res = GetOptions(
+    'help|h'      => sub {
+        require Pod::Usage;
+        Pod::Usage::pod2usage(-verbose=>0, -exitval=>0);
+    },
+    'version|v'   => sub {
+        say "plstrace version ", ($main::VERSION // '?');
+        exit 0;
+    },
     't'           => sub { $Opts{show_time}++ },
     'reltime'     => sub { $Opts{show_time} += 10 },
     's=i'         => sub { $Opts{strsize} = $_[1] },
@@ -52,10 +60,8 @@ exec @cmd;
 
 =head1 SYNOPSIS
 
-Usage:
-
- % plstrace --help
- % plstrace --version
+ % plstrace --help (or -h)
+ % plstrace --version (or -v)
  % plstrace [PLSTRACE OPTIONS] <PROG> [PROG OPTIONS]
 
 Basic example (the only required option is C<-e trace=...> to specify which
