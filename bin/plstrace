@@ -52,8 +52,8 @@ exec @cmd;
 
 Usage:
 
- % plstrace [--help | -h]
- % plstrace [--version | -v]
+ % plstrace --help
+ % plstrace --version
  % plstrace [PLSTRACE OPTIONS] <PROG> [PROG OPTIONS]
 
 Basic example (the only required option is C<-e trace=...> to specify which
@@ -65,10 +65,6 @@ main package (C<*>) and all subroutines in the C<Foo> package (C<Foo::*>)):
 Show time spent inside each subroutine:
 
  % plstrace -e trace=... -T your_program.pl ...
-
-More options:
-
- % plstrace -h
 
 Sample output (using C<--reltime -t> options):
 
