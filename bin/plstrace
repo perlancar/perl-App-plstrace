@@ -1,0 +1,96 @@
+#!/usr/bin/env perl
+
+use 5.010;
+use strict;
+use warnings;
+
+# DATE
+# VERSION
+
+use Debug::LTrace::plstrace;
+use Getopt::Long qw(:config auto_help auto_version bundling no_permute);
+
+my %Opts;
+GetOptions(
+    't'   => sub { $Opts{-t}++ },
+    's=i' => \$Opts{-s},
+    'T'   => sub { $Opts{-T} = 1 },
+);
+
+my $prog = shift @ARGV;
+exec $^X, "-MDebug::LTrace::plstrace=(map {"$_=$Opts{$s}"} keys %Opts);
+
+# ABSTRACT: Trace calls to Perl functions
+# PODNAME: plstrace
+
+=head1 SYNOPSIS
+
+Basic usage:
+
+ % plstrace your_program.pl --your --prog --options
+
+Show time spent inside each subroutine:
+
+ % plstrace -T your_program.pl ...
+
+More options:
+
+ % plstrace -h
+
+
+=head1 DESCRIPTION
+
+B<plstrace> is "strace for your Perl functions". Its interface and output is
+similar to Unix utility B<strace>. But only a few strace options are currently
+supported.
+
+Some notes (caveats, limitations):
+
+=over
+
+=item * Currently implemented by wrapping Perl subroutines with Perl subroutines during INIT phase
+
+caller() has been adjusted so the wrapped subroutines does not see the trace
+wrappers (see L<Hook::LexWrap>).
+
+There are other low-level approaches for tracing (that might be used), see
+L</"SEE ALSO">.
+
+=item * Perl builtin functions are not traced, only user-defined subroutines
+
+=item * O/S system calls or external programs are not traced
+
+=item * Time spent in each subroutine (-T) is inclusive
+
+This means if A calls B and B calls C, A's time will include B and C.
+
+=item * Timing overhead currently has not been adjusted
+
+So for small time amounts (microseconds or smaller) you should understand that
+the times are not very accurate.
+
+=back
+
+
+=head1 OPTIONS
+
+Unless specified otherwise, these options follow its strace counterpart. The
+long options are the ones that are added and different from strace.
+
+=head2 -s INT
+
+=head2 -T
+
+=head2 -t
+
+
+=head1 SEE ALSO
+
+B<strace>, the inspiration for this program.
+
+L<Debug::LTrace::plstrace> which currently actually implements the tracing, and
+which in turn is based on L<Debug::LTrace>.
+
+Other subroutine tracing modules: L<Devel::TraceCalls>, L<Runops::Trace>,
+L<Devel::TraceSubs>, L<Devel::STrace> (and others).
+
