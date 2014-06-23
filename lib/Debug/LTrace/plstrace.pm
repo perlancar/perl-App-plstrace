@@ -12,6 +12,13 @@ use Time::HiRes qw/time/;
 # VERSION
 # DATE
 
+# options:
+# -strsize
+# -show_time
+# -show_spent_time
+# -show_entry
+# -show_exit
+
 my %import_params;
 my @permanent_objects;
 
@@ -82,7 +89,7 @@ sub _start_trace {
                 my $start_time = time();
                 my $msg = "> $sub($args)";
                 $msg = $self->_fmttime($start_time) . " $msg" if $self->{-show_time};
-                warn "$msg\n";
+                warn "$msg\n" if $self->{-show_entry};
                 unshift @messages, [ "$sub($args)", $start_time ];
             },
             post => sub {
@@ -94,12 +101,14 @@ sub _start_trace {
                 my $msg = "< $call_data->[0]$res";
                 $msg = $self->_fmttime($call_data->[1]) . " $msg" if $self->{-show_time};
                 $msg .= sprintf(" <%.6f>", $end_time - $call_data->[1] ) if $self->{-show_spent_time};
-                warn "$msg\n";
+                warn "$msg\n" if $self->{-show_exit};
             } );
     }
 
     # defaults
     $self->{-strsize} //= 32;
+    $self->{-show_entry} //= 1;
+    $self->{-show_exit}  //= 1;
 
     $self;
 }

@@ -14,10 +14,12 @@ use Time::HiRes qw(time);
 my %Opts;
 my $subs;
 my $res = GetOptions(
-    't'        => sub { $Opts{show_time}++ },
-    'reltime'  => sub { $Opts{show_time} += 10 },
-    's=i'      => sub { $Opts{strsize} = $_[1] },
-    'T'        => sub { $Opts{show_spent_time} = 1 },
+    't'           => sub { $Opts{show_time}++ },
+    'reltime'     => sub { $Opts{show_time} += 10 },
+    's=i'         => sub { $Opts{strsize} = $_[1] },
+    'T'           => sub { $Opts{show_spent_time} = 1 },
+    'show-entry!' => sub { $Opts{show_entry} = $_[1] ? 1:0 },
+    'show-exit!'  => sub { $Opts{show_exit}  = $_[1] ? 1:0 },
     'e=s'      => sub {
         my $arg = $_[1];
         my ($qual, $vals) = $arg =~ /^(\w+)=(.*)/
@@ -144,6 +146,16 @@ When under C<-t>, show relative time against program start (in seconds, down to
 microseconds). Program start is measured right before plstrace exec's perl with
 Debug::LTrace::plstrace and your program. So the overhead of exec, perl startup,
 module and program compilation are all counted.
+
+=head2 --(no)hshow-entry
+
+Whether to show subroutine entry. Default is true. Use C<--noshow-entry> to hide
+showing entry traces.
+
+=head2 --(no)show-exit
+
+Whether to show subroutine exit. Default is true. Use C<--noshow-exit> to hide
+showing exit traces.
 
 
 =head1 SEE ALSO
