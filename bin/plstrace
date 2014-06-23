@@ -37,7 +37,7 @@ defined $subs or die "Please specify -e trace=... option\n";
 my $prog = shift @ARGV;
 
 my $dlp_import = $subs;
-$dlp_import .= "," . join(",", map {"-$_=$Opts{$_}"} keys %Opts);
+$dlp_import .= "," . join(",", map {"-$_=$Opts{$_}"} keys %Opts) if keys %Opts;
 my $start_time = time();
 $dlp_import .= ",-start_time=$start_time";
 
@@ -45,7 +45,7 @@ my @cmd = ($^X, "-MDebug::LTrace::plstrace=$dlp_import", $prog, @ARGV);
 say join " ", @cmd if $ENV{DEBUG};
 exec @cmd;
 
-# ABSTRACT: Trace calls to Perl functions
+# ABSTRACT: Trace Perl function calls
 # PODNAME: plstrace
 
 =head1 SYNOPSIS

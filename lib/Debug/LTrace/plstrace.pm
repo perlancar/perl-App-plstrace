@@ -20,12 +20,6 @@ sub import {
     $import_params{ ${ \scalar caller } } = [@_];
 }
 
-INIT {
-    while ( my ( $package, $params ) = each %import_params ) {
-        push @permanent_objects, __PACKAGE__->_new( $package, @$params ) if @$params;
-    }
-}
-
 # External constructor
 sub new {
     return unless defined wantarray;
@@ -139,8 +133,13 @@ sub _fmttime {
     }
 }
 
-1;
+INIT {
+    while ( my ( $package, $params ) = each %import_params ) {
+        push @permanent_objects, __PACKAGE__->_new( $package, @$params ) if @$params;
+    }
+}
 
-# TODO:
-# support -s (strsize)
-#
+1;
+# ABSTRACT: Implement plstrace (internal module)
+
+=for Pod::Coverage ^(.+)$
