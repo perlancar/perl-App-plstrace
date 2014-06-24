@@ -1,5 +1,7 @@
 package Debug::LTrace::plstrace;
 
+use Time::HiRes qw/time/; my $time1 = time(); # time1 = the beginning of this module's compilation
+
 use 5.010001;
 use warnings;
 use strict;
@@ -7,10 +9,11 @@ use strict;
 use Devel::Symdump;
 use Hook::LexWrap;
 use SHARYANTO::String::Util qw/qqquote/;
-use Time::HiRes qw/time/;
 
 # VERSION
 # DATE
+
+my ($time0, $time2, $time3, $time4);
 
 # options:
 # -strsize
@@ -43,9 +46,8 @@ sub _new {
     foreach my $p (@params) {
         if ($p =~ /^(-\w+)(?:=(.*))?/) {
             # option
-            if ($1 eq '-t') {
-                # additive options
-                $self->{$1}++;
+            if ($1 eq '-time0') {
+                $time0 = $2;
             } else {
                 $self->{$1} = defined($2) ? $2 : 1;
             }
@@ -64,6 +66,7 @@ sub _new {
     bless $self, $class;
     $self->_start_trace();
     #use DD; dd $self;
+
     $self;
 }
 
@@ -86,21 +89,21 @@ sub _start_trace {
                 #my ($caller_sub) = ( caller(1) )[3];
 
                 my $args = join(", ", map {$self->_esc($_)} @_);
-                my $start_time = time();
+                my $entry_time = time();
                 my $msg = "> $sub($args)";
-                $msg = $self->_fmttime($start_time) . " $msg" if $self->{-show_time};
+                $msg = $self->_fmttime($entry_time) . " $msg" if $self->{-show_time};
                 warn "$msg\n" if $self->{-show_entry};
-                unshift @messages, [ "$sub($args)", $start_time ];
+                unshift @messages, [ "$sub($args)", $entry_time ];
             },
             post => sub {
-                my $end_time = time();
+                my $exit_time = time();
                 my $wantarray = ( caller(0) )[5];
                 my $call_data = shift(@messages);
 
                 my $res = defined($wantarray) ? " = ".$self->_esc($wantarray ? pop : [pop]) : '';
                 my $msg = "< $call_data->[0]$res";
                 $msg = $self->_fmttime($call_data->[1]) . " $msg" if $self->{-show_time};
-                $msg .= sprintf(" <%.6f>", $end_time - $call_data->[1] ) if $self->{-show_spent_time};
+                $msg .= sprintf(" <%.6f>", $exit_time - $call_data->[1] ) if $self->{-show_spent_time};
                 warn "$msg\n" if $self->{-show_exit};
             } );
     }
@@ -131,7 +134,10 @@ sub _fmttime {
 
     my @lt = localtime($time);
     if ($self->{-show_time} > 10) {
-        sprintf "%010.6f", $time - $self->{-start_time};
+        # we try to remove this module's effect on relative time
+        # but this is negligible (all below 1ms)
+        my $reltime = ($time - $time0) - ($time2-$time1) - ($time4-$time3);
+        sprintf "%010.6f", $reltime;
     } elsif ($self->{-show_time} > 2) {
         sprintf "%.6f", $time;
     } elsif ($self->{-show_time} > 1) {
@@ -143,10 +149,15 @@ sub _fmttime {
 }
 
 INIT {
+    $time3 = time(); # time3 = start of wrapping
     while ( my ( $package, $params ) = each %import_params ) {
         push @permanent_objects, __PACKAGE__->_new( $package, @$params ) if @$params;
     }
+    $time4 = time(); # time4 = end of wrapping
+    #printf "D:time0=<$time0> time1=<$time1> time2=<$time2> time3=<$time3> time2-time1=<%.6f> time4-time3=<%.6f>\n", $time2-$time1, $time4-$time3;
 }
+
+$time2 = time(); # time2 = the end of this module's compilation
 
 1;
 # ABSTRACT: Implement plstrace (internal module)

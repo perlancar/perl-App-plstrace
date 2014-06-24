@@ -7,7 +7,6 @@ use warnings;
 # DATE
 # VERSION
 
-use Debug::LTrace::plstrace;
 use Getopt::Long qw(:config bundling no_permute);
 use Time::HiRes qw(time);
 
@@ -51,8 +50,8 @@ my $prog = shift @ARGV;
 
 my $dlp_import = $subs;
 $dlp_import .= "," . join(",", map {"-$_=$Opts{$_}"} keys %Opts) if keys %Opts;
-my $start_time = time();
-$dlp_import .= ",-start_time=$start_time";
+my $time0 = time(); # t0 = before we exec perl and compile Debug::LTrace::plstrace and wrap
+$dlp_import .= ",-time0=$time0";
 
 my @cmd = ($^X, "-MDebug::LTrace::plstrace=$dlp_import", $prog, @ARGV);
 say join " ", @cmd if $ENV{DEBUG};
