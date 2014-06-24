@@ -108,7 +108,7 @@ sub _start_trace {
 
                 my $res = defined($wantarray) ? " = ".$self->_esc($wantarray ? pop : [pop]) : '';
                 my $msg = "< $call_data->[0]$res";
-                $msg = $self->_fmttime($call_data->[1]) . " $msg" if $self->{-show_time};
+                $msg = $self->_fmttime($exit_time) . " $msg" if $self->{-show_time};
                 $msg .= sprintf(" <%.6f>", $exit_time - $call_data->[1] ) if $self->{-show_spent_time};
                 if ($self->{-show_exit}) {
                     warn "$msg\n";
