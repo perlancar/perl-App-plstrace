@@ -1,5 +1,11 @@
 Revision history for App-plstrace
 
+0.04    2014-06-24 (SHARYANTO)
+
+        - More accurate relative timing (takes into account the plstrace's
+          overhead).
+
+
 0.03    2014-06-24 (SHARYANTO)
 
         - No functional changes.
