@@ -13,6 +13,7 @@ use Time::HiRes qw(time);
 
 my %Opts;
 my $subs;
+my $reltime;
 my $res = GetOptions(
     'help|h'      => sub {
         require Pod::Usage;
@@ -23,7 +24,7 @@ my $res = GetOptions(
         exit 0;
     },
     't'           => sub { $Opts{show_time}++ },
-    'reltime'     => sub { $Opts{show_time} += 10 if $Opts{show_time} },
+    'reltime'     => sub { $reltime++ },
     's=i'         => sub { $Opts{strsize} = $_[1] },
     'T'           => sub { $Opts{show_spent_time} = 1 },
     'show-entry!' => sub { $Opts{show_entry} = $_[1] ? 1:0 },
@@ -41,6 +42,8 @@ my $res = GetOptions(
     },
 );
 exit 99 unless $res;
+
+$Opts{show_time} += 10 if $Opts{show_time} && $reltime;
 
 @ARGV or die "plstrace: Please specify Perl program to trace\n";
 defined $subs or die "plstrace: Please specify -e trace=... option\n";
