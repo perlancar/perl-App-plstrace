@@ -1,5 +1,14 @@
 Revision history for App-plstrace
 
+0.05    2014-06-24 (SHARYANTO)
+
+        - Remove --reltime, replace it with -tttt.
+
+        - Fix showing exit time.
+
+        - Introduce -ttttt (show relative time to previous trace message).
+
+
 0.04    2014-06-24 (SHARYANTO)
 
         - More accurate relative timing (takes into account the plstrace's
