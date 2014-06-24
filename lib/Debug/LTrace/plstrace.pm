@@ -1,6 +1,8 @@
 package Debug::LTrace::plstrace;
 
-use Time::HiRes qw/time/; my $time1 = time(); # time1 = the beginning of this module's compilation
+use Time::HiRes qw/time/;
+my $time1;
+BEGIN { $time1 = time() } # time1 = the beginning of this module's compilation
 
 use 5.010001;
 use warnings;
