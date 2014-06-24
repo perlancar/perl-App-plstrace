@@ -31,19 +31,19 @@ my $res = GetOptions(
     'e=s'      => sub {
         my $arg = $_[1];
         my ($qual, $vals) = $arg =~ /^(\w+)=(.*)/
-            or die "Invalid value for -e, please see documentation\n";
+            or die "plstrace: Invalid value for -e, please see documentation\n";
         #$vals = [split /,/, $vals];
         if ($qual eq 'trace') {
             $subs = $vals;
         } else {
-            die "Unknown qualifier for -e '$qual', please see documentation\n";
+            die "plstrace: Unknown qualifier for -e '$qual', please see documentation\n";
         }
     },
 );
 exit 99 unless $res;
 
-@ARGV or die "Please specify Perl program to trace\n";
-defined $subs or die "Please specify -e trace=... option\n";
+@ARGV or die "plstrace: Please specify Perl program to trace\n";
+defined $subs or die "plstrace: Please specify -e trace=... option\n";
 my $prog = shift @ARGV;
 
 my $dlp_import = $subs;
@@ -173,4 +173,3 @@ which in turn is based on L<Debug::LTrace>.
 
 Other subroutine tracing modules: L<Devel::TraceCalls>, L<Runops::Trace>,
 L<Devel::TraceSubs>, L<Devel::STrace> (and others).
-
