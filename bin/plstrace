@@ -23,7 +23,7 @@ my $res = GetOptions(
         exit 0;
     },
     't'           => sub { $Opts{show_time}++ },
-    'reltime'     => sub { $Opts{show_time} += 10 },
+    'reltime'     => sub { $Opts{show_time} += 10 if $Opts{show_time} },
     's=i'         => sub { $Opts{strsize} = $_[1] },
     'T'           => sub { $Opts{show_spent_time} = 1 },
     'show-entry!' => sub { $Opts{show_entry} = $_[1] ? 1:0 },
