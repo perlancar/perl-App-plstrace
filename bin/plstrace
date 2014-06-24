@@ -12,7 +12,6 @@ use Time::HiRes qw(time);
 
 my %Opts;
 my $subs;
-my $reltime;
 my $res = GetOptions(
     'help|h'      => sub {
         require Pod::Usage;
@@ -23,7 +22,6 @@ my $res = GetOptions(
         exit 0;
     },
     't'           => sub { $Opts{show_time}++ },
-    'reltime'     => sub { $reltime++ },
     's=i'         => sub { $Opts{strsize} = $_[1] },
     'T'           => sub { $Opts{show_spent_time} = 1 },
     'show-entry!' => sub { $Opts{show_entry} = $_[1] ? 1:0 },
@@ -41,8 +39,6 @@ my $res = GetOptions(
     },
 );
 exit 99 unless $res;
-
-$Opts{show_time} += 10 if $Opts{show_time} && $reltime;
 
 @ARGV or die "plstrace: Please specify Perl program to trace\n";
 defined $subs or die "plstrace: Please specify -e trace=... option\n";
@@ -76,7 +72,7 @@ Show time spent inside each subroutine:
 
  % plstrace -e trace=... -T your_program.pl ...
 
-Sample output (using C<--reltime -t> options):
+Sample output (using C<-tttt> options):
 
  000.009660 > main::foo("some arg", "1")
  000.020905 > main::bar()
@@ -140,6 +136,14 @@ long options are the ones that are added and different from strace.
 
 =head2 -t
 
+Like in strace, if specified once (C<-t>) will show time of day down to the
+second, if specified twice (C<-tt>) will show time of day with microseconds, if
+specified three times (C<-ttt>) will print epoch with microseconds.
+
+plstrace adds two more styles: four times (C<-tttt>) will show relative time to
+pogram start with microseconds, five times (C<-ttttt>) will show relative time
+to I<previous message> with microseconds.
+
 =head2 -e trace=SUB_SPECS(str)
 
 C<< <SUB SPECS> >> is a comma-separated sub spec. Each sub spec is either
@@ -147,13 +151,6 @@ C</\w+/> (e.g. C<foo>) to mean a named subroutine in the C<main> package, C<*>
 to mean all subroutines in the C<main> package, C</\w+(::\w+)+/> (e.g.
 C<Foo::func>, C<Foo::Bar::blah>) to mean a fully-qualified named subroutine, or
 C</\w+(::\w+)*::\*/> (e.g. C<Foo::*>) to mean all subroutines in a package.
-
-=head2 --reltime
-
-When under C<-t>, show relative time against program start (in seconds, down to
-microseconds). Program start is measured right before plstrace exec's perl with
-Debug::LTrace::plstrace and your program. So the overhead of exec, perl startup,
-module and program compilation are all counted.
 
 =head2 --(no)hshow-entry
 
