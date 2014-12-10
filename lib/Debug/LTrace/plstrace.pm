@@ -1,5 +1,8 @@
 package Debug::LTrace::plstrace;
 
+# DATE
+# VERSION
+
 use Time::HiRes qw/time/;
 my $time1;
 BEGIN { $time1 = time() } # time1 = the beginning of this module's compilation
@@ -10,10 +13,7 @@ use strict;
 
 use Devel::Symdump;
 use Hook::LexWrap;
-use SHARYANTO::String::Util qw/qqquote/;
-
-# VERSION
-# DATE
+use String::PerlQuote qw/double_quote/;
 
 my ($time0, $time2, $time3, $time4);
 
@@ -133,9 +133,9 @@ sub _esc {
     } elsif (ref $data) {
         "$data";
     } elsif (length($data) > $self->{-strsize}) {
-        qqquote(substr($data,0,$self->{-strsize}))."...";
+        double_quote(substr($data,0,$self->{-strsize}))."...";
     } else {
-        qqquote($data);
+        double_quote($data);
     }
 }
 
