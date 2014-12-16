@@ -54,7 +54,7 @@ say join " ", @cmd if $ENV{DEBUG};
 exec @cmd;
 
 # ABSTRACT: Trace Perl function calls
-# PODNAME: plstrace
+# PODNAME:
 
 =head1 SYNOPSIS
 
