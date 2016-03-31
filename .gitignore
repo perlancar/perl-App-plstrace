@@ -1,3 +1,4 @@
 App-plstrace-*
 .build
 *~
+nytprof*
